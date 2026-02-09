@@ -65,6 +65,11 @@ async function fetchGitHubAPI(url: string): Promise<Record<string, unknown> | un
     'User-Agent': 'Solana-Programs-Directory'
   };
 
+  // Add GitHub token if available (increases rate limit from 60 to 5000 requests/hour)
+  if (process.env.GITHUB_TOKEN) {
+    headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+  }
+
   const response = await fetch(url, { headers });
 
   if (!response.ok) {
@@ -73,6 +78,13 @@ async function fetchGitHubAPI(url: string): Promise<Record<string, unknown> | un
       throw new Error('Repository not found');
     }
     if (response.status === 403) {
+      const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
+      const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+      console.error(`[fetch-code] Rate limit remaining: ${rateLimitRemaining}`);
+      if (rateLimitReset) {
+        const resetTime = new Date(parseInt(rateLimitReset) * 1000);
+        console.error(`[fetch-code] Rate limit resets at: ${resetTime.toISOString()}`);
+      }
       throw new Error('GitHub API rate limit exceeded. Please try again later.');
     }
     throw new Error(`GitHub API error: ${response.status}`);

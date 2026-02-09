@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * Sync JSON Database to Neon PostgreSQL
- * One-way sync: JSON → Neon (master is JSON)
+ * Matches actual Neon DB schema
  */
 
 const { Pool } = require('pg');
-const fs = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 
 const JSON_PATH = path.join(__dirname, '..', 'data', 'github-solana-programs.json');
@@ -24,7 +24,7 @@ async function syncJsonToNeon() {
   console.log('🔄 Syncing JSON to Neon PostgreSQL...\n');
   
   // Read JSON
-  const jsonData = JSON.parse(await fs.readFile(JSON_PATH, 'utf-8'));
+  const jsonData = JSON.parse(fs.readFileSync(JSON_PATH, 'utf-8'));
   const repos = jsonData.repos || [];
   
   console.log(`📁 JSON file has ${repos.length} programs`);
@@ -37,9 +37,9 @@ async function syncJsonToNeon() {
     const neonCount = parseInt(countResult.rows[0].count);
     console.log(`🗄️  Neon DB has ${neonCount} programs`);
     
-    // Get existing fullNames from Neon
-    const existingResult = await client.query('SELECT full_name FROM programs');
-    const existingSet = new Set(existingResult.rows.map(r => r.full_name.toLowerCase()));
+    // Get existing github_ids from Neon
+    const existingResult = await client.query('SELECT github_id FROM programs');
+    const existingSet = new Set(existingResult.rows.map(r => r.github_id?.toLowerCase()));
     console.log(`📋 ${existingSet.size} unique programs in Neon`);
     
     let inserted = 0;
@@ -50,64 +50,61 @@ async function syncJsonToNeon() {
     // Process each repo from JSON
     for (const repo of repos) {
       try {
-        const fullName = repo.fullName;
+        const githubId = repo.fullName || `${repo.owner}/${repo.name}`;
         
-        if (!fullName) {
-          console.warn(`⚠️  Skipping repo without fullName`);
+        if (!githubId || githubId === '/') {
+          console.warn(`⚠️  Skipping repo without valid identifier`);
           skipped++;
           continue;
         }
         
-        const lowerName = fullName.toLowerCase();
+        const lowerId = githubId.toLowerCase();
         
         const data = {
-          fullName: fullName,
+          githubId: githubId,
           owner: repo.owner || '',
+          repo: repo.name || '',
           name: repo.name || '',
-          url: repo.url || `https://github.com/${fullName}`,
+          url: repo.url || `https://github.com/${githubId}`,
           description: repo.description || '',
           stars: repo.stars || 0,
           language: repo.language || 'Unknown',
-          updated: repo.updated ? new Date(repo.updated) : new Date(),
           topics: toPostgresArray(repo.topics),
           category: repo.category || 'Infrastructure',
-          subCategory: repo.subCategory || null,
-          defaultBranch: repo.defaultBranch || 'main'
+          updated: repo.updated ? new Date(repo.updated) : new Date()
         };
         
-        if (existingSet.has(lowerName)) {
+        if (existingSet.has(lowerId)) {
           // Update existing
           await client.query(`
             UPDATE programs SET
               owner = $1,
-              name = $2,
-              url = $3,
-              description = $4,
-              stars = $5,
-              language = $6,
-              updated_at = $7,
+              repo = $2,
+              name = $3,
+              url = $4,
+              description = $5,
+              stars = $6,
+              language = $7,
               topics = $8,
               category = $9,
-              sub_category = $10,
-              default_branch = $11
-            WHERE LOWER(full_name) = LOWER($12)
+              last_synced_at = NOW()
+            WHERE LOWER(github_id) = LOWER($10)
           `, [
-            data.owner, data.name, data.url, data.description, data.stars,
-            data.language, data.updated, data.topics, data.category,
-            data.subCategory, data.defaultBranch, fullName
+            data.owner, data.repo, data.name, data.url, data.description,
+            data.stars, data.language, data.topics, data.category, githubId
           ]);
           updated++;
         } else {
           // Insert new
           await client.query(`
             INSERT INTO programs (
-              full_name, owner, name, url, description, stars,
-              language, updated_at, topics, category, sub_category, default_branch
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+              github_id, owner, repo, name, url, description, stars,
+              language, topics, category, created_at, updated_at, last_synced_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11, NOW())
           `, [
-            data.fullName, data.owner, data.name, data.url, data.description,
-            data.stars, data.language, data.updated, data.topics,
-            data.category, data.subCategory, data.defaultBranch
+            data.githubId, data.owner, data.repo, data.name, data.url,
+            data.description, data.stars, data.language, data.topics,
+            data.category, data.updated
           ]);
           inserted++;
         }
@@ -146,7 +143,7 @@ async function syncJsonToNeon() {
 async function checkDuplicates() {
   console.log('\n🔍 Checking for duplicates in JSON...\n');
   
-  const jsonData = JSON.parse(await fs.readFile(JSON_PATH, 'utf-8'));
+  const jsonData = JSON.parse(fs.readFileSync(JSON_PATH, 'utf-8'));
   const repos = jsonData.repos || [];
   
   const seen = new Map();
@@ -155,11 +152,7 @@ async function checkDuplicates() {
   for (const repo of repos) {
     const lowerName = (repo.fullName || '').toLowerCase();
     if (seen.has(lowerName)) {
-      duplicates.push({
-        name: repo.fullName,
-        first: seen.get(lowerName),
-        second: repo
-      });
+      duplicates.push(repo.fullName);
     } else {
       seen.set(lowerName, repo);
     }
@@ -169,42 +162,10 @@ async function checkDuplicates() {
     console.log('✅ No duplicates found in JSON');
   } else {
     console.log(`⚠️  Found ${duplicates.length} duplicates:`);
-    duplicates.forEach(d => console.log(`   - ${d.name}`));
+    duplicates.forEach(d => console.log(`   - ${d}`));
   }
   
   return duplicates.length;
-}
-
-// Clean duplicates from JSON
-async function cleanDuplicates() {
-  console.log('\n🧹 Cleaning duplicates from JSON...\n');
-  
-  const jsonData = JSON.parse(await fs.readFile(JSON_PATH, 'utf-8'));
-  const repos = jsonData.repos || [];
-  
-  const seen = new Set();
-  const unique = [];
-  let removed = 0;
-  
-  for (const repo of repos) {
-    const lowerName = (repo.fullName || '').toLowerCase();
-    if (seen.has(lowerName)) {
-      removed++;
-    } else {
-      seen.add(lowerName);
-      unique.push(repo);
-    }
-  }
-  
-  if (removed > 0) {
-    jsonData.repos = unique;
-    jsonData.totalRepos = unique.length;
-    await fs.writeFile(JSON_PATH, JSON.stringify(jsonData, null, 2));
-    console.log(`✅ Removed ${removed} duplicates`);
-    console.log(`📊 JSON now has ${unique.length} unique programs`);
-  } else {
-    console.log('✅ No duplicates to clean');
-  }
 }
 
 // Main
@@ -213,8 +174,6 @@ async function main() {
   
   if (args.includes('--check')) {
     await checkDuplicates();
-  } else if (args.includes('--clean')) {
-    await cleanDuplicates();
   } else {
     // Full sync
     await checkDuplicates();
