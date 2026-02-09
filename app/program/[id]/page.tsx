@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import {
   Star,
-  ExternalLink,
   Calendar,
   Code2,
   Tag,
@@ -17,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/header';
 import { ProgramCard } from '@/components/program-card';
-import { CodeSnippet } from '@/components/code-snippet';
+import { CodeViewer } from '@/components/code-viewer';
 import { DownloadZipButton } from '@/components/download-zip-button';
 import { formatStars, formatDate } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
@@ -185,7 +184,7 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
                 <FileCode className="h-5 w-5 text-violet-500" />
                 Code Preview
               </h2>
-              <CodeSnippet owner={program.owner} repo={program.name} />
+              <CodeViewer owner={program.owner} repo={program.name} />
             </div>
 
             <Separator className="bg-border/50" />
@@ -205,19 +204,6 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
               <DownloadZipButton owner={program.owner} repo={program.name} />
             </div>
 
-            <Separator className="bg-border/50" />
-
-            <a 
-              href={program.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <Button className="w-full gap-2 btn-shine rounded-xl" size="lg">
-                <ExternalLink className="h-4 w-4" />
-                View on GitHub
-              </Button>
-            </a>
           </div>
 
           <div className="space-y-6">

@@ -3,7 +3,13 @@ import rawData from '@/data/github-solana-programs.json';
 
 // Simple synchronous data access
 export function getProgramsData(): ProgramsData {
-  return rawData as ProgramsData;
+  const repos = (rawData as { repos: Program[] }).repos;
+  return {
+    repos,
+    totalRepos: repos.length,
+    scrapedAt: new Date().toISOString(),
+    keywordsSearched: []
+  };
 }
 
 // Simple search function

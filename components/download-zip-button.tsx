@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DownloadZipButtonProps {
@@ -9,59 +9,85 @@ interface DownloadZipButtonProps {
   repo: string;
 }
 
+const COMMON_BRANCHES = ['main', 'master', 'dev', 'develop'];
+
 export function DownloadZipButton({ owner, repo }: DownloadZipButtonProps) {
   const [loading, setLoading] = useState(false);
-  const [defaultBranch, setDefaultBranch] = useState<string>('main');
-  const [checking, setChecking] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [detectedBranch, setDetectedBranch] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchDefaultBranch() {
+    async function detectBranch() {
       try {
         const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
         if (response.ok) {
           const data = await response.json();
-          setDefaultBranch(data.default_branch || 'main');
+          setDetectedBranch(data.default_branch);
         }
-      } catch (error) {
-        console.warn('Failed to fetch default branch:', error);
-      } finally {
-        setChecking(false);
+      } catch {
+        // Silently fail, will try common branches
       }
     }
-    fetchDefaultBranch();
+    detectBranch();
   }, [owner, repo]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setLoading(true);
-    
-    // Try the detected/default branch
-    const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${defaultBranch}.zip`;
-    
-    // Create a temporary link and click it
-    const link = document.createElement('a');
-    link.href = zipUrl;
-    link.download = `${repo}-${defaultBranch}.zip`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setTimeout(() => setLoading(false), 1000);
+    setError(null);
+
+    const branchesToTry = detectedBranch 
+      ? [detectedBranch, ...COMMON_BRANCHES.filter(b => b !== detectedBranch)]
+      : COMMON_BRANCHES;
+
+    for (const branch of branchesToTry) {
+      const url = `https://github.com/${owner}/${repo}/archive/refs/heads/${branch}.zip`;
+      
+      // Create hidden iframe to trigger download
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      
+      // Wait a bit to see if download starts
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      document.body.removeChild(iframe);
+      
+      // Assume it worked if we got here (downloads are hard to detect)
+      setLoading(false);
+      return;
+    }
+
+    // If all else fails, open GitHub page
+    setError('Could not auto-download. Opening GitHub...');
+    setTimeout(() => {
+      window.open(`https://github.com/${owner}/${repo}`, '_blank');
+      setLoading(false);
+    }, 1500);
   };
 
   return (
-    <Button 
-      variant="outline" 
-      className="w-full gap-2 rounded-xl" 
-      size="lg"
-      onClick={handleDownload}
-      disabled={loading || checking}
-    >
-      {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Download className="h-4 w-4" />
+    <div className="w-full">
+      <Button 
+        variant="outline" 
+        className="w-full gap-2 rounded-xl" 
+        size="lg"
+        onClick={handleDownload}
+        disabled={loading}
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Download className="h-4 w-4" />
+        )}
+        {loading ? 'Downloading...' : 'Download ZIP'}
+      </Button>
+      
+      {error && (
+        <div className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" />
+          {error}
+        </div>
       )}
-      {checking ? 'Checking...' : loading ? 'Downloading...' : 'Download ZIP'}
-    </Button>
+    </div>
   );
 }
