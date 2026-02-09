@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5F3FF" />
+      <stop offset="50%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FAE8FF" />
+    </linearGradient>
+    
+    <!-- Banana gradient -->
+    <linearGradient id="bananaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="50%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    
+    <!-- Glow effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Hex pattern -->
+    <pattern id="hexPattern" x="0" y="0" width="40" height="46" patternUnits="userSpaceOnUse">
+      <polygon points="20,6 34,13 34,27 20,34 6,27 6,13" 
+               fill="none" stroke="#DDD6FE" stroke-width="1" opacity="0.5"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+  
+  <!-- Hex pattern overlay -->
+  <rect width="1200" height="630" fill="url(#hexPattern)" opacity="0.3"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="150" fill="#C4B5FD" opacity="0.2"/>
+  <circle cx="1100" cy="530" r="200" fill="#E9D5FF" opacity="0.3"/>
+  
+  <!-- Main content container -->
+  <g transform="translate(100, 165)">
+    <!-- Logo/Banana -->
+    <g transform="translate(0, 0)" filter="url(#glow)">
+      <ellipse cx="60" cy="60" rx="55" ry="55" fill="#E9D5FF" opacity="0.5"/>
+      <!-- Banana shape -->
+      <path d="M 25 85 
+               Q 20 55, 35 35 
+               Q 50 15, 75 20 
+               Q 100 25, 110 50 
+               Q 115 70, 105 85 
+               Q 90 100, 60 105 
+               Q 40 108, 25 85" 
+            fill="url(#bananaGrad)"/>
+      
+      <!-- Circuit details -->
+      <path d="M 45 45 L 60 50 L 70 40" stroke="white" stroke-width="2" fill="none" opacity="0.8"/>
+      <path d="M 80 35 L 90 40 L 100 30" stroke="white" stroke-width="2" fill="none" opacity="0.8"/>
+      <path d="M 55 65 L 70 70 L 85 60" stroke="white" stroke-width="2" fill="none" opacity="0.8"/>
+      
+      <!-- Circuit nodes -->
+      <circle cx="45" cy="45" r="4" fill="white"/>
+      <circle cx="70" cy="40" r="3" fill="white"/>
+      <circle cx="80" cy="35" r="4" fill="white"/>
+      <circle cx="100" cy="30" r="3" fill="white"/>
+      <circle cx="55" cy="65" r="4" fill="white"/>
+      <circle cx="85" cy="60" r="3" fill="white"/>
+    </g>
+    
+    <!-- Text content -->
+    <g transform="translate(140, 20)">
+      <!-- Title -->
+      <text x="0" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="800" fill="#7C3AED">
+        SOL Programs
+      </text>
+      
+      <!-- Subtitle -->
+      <text x="0" y="100" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="400" fill="#6B7280">
+        The most comprehensive directory of Solana programs
+      </text>
+      
+      <!-- Stats -->
+      <text x="0" y="160" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="600" fill="#8B5CF6">
+        1,800+ Programs • 8 Categories • Open Source
+      </text>
+    </g>
+  </g>
+  
+  <!-- Bottom accent line -->
+  <rect x="100" y="580" width="200" height="6" rx="3" fill="#8B5CF6"/>
+</svg>
