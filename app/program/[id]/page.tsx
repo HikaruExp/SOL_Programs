@@ -9,7 +9,8 @@ import {
   Tag,
   ArrowLeft,
   Eye,
-  Download
+  Download,
+  FileCode
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,9 +18,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/header';
 import { ProgramCard } from '@/components/program-card';
+import { CodeSnippetPreview } from '@/components/code-snippet-preview';
 import { formatStars, formatDate } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
 import { getCategoryFromProgram } from '@/types';
+import { fetchRepoCode, RepoFile } from '@/lib/fetch-code';
 
 // Helper to convert fullName to URL-safe id
 function toUrlId(fullName: string): string {
@@ -34,7 +37,6 @@ function fromUrlId(id: string): string {
 // Generate static params for popular programs at build time
 export function generateStaticParams() {
   const data = getProgramsData();
-  // Pre-build top 100 programs by stars
   const topPrograms = data.repos
     .sort((a, b) => b.stars - a.stars)
     .slice(0, 100);
@@ -60,21 +62,29 @@ export function generateMetadata({ params }: { params: { id: string } }) {
   };
 }
 
-export default function ProgramPage({ params }: { params: { id: string } }) {
+// Fetch code files at build time
+async function getCodeFiles(owner: string, repo: string): Promise<RepoFile[]> {
+  try {
+    const repoContent = await fetchRepoCode(owner, repo);
+    return repoContent.files.slice(0, 5); // Get top 5 files
+  } catch (error) {
+    console.warn(`Failed to fetch code for ${owner}/${repo}:`, error);
+    return [];
+  }
+}
+
+export default async function ProgramPage({ params }: { params: { id: string } }) {
   const fullName = fromUrlId(params.id);
   const data = getProgramsData();
   
-  // Find program - try exact match first
   let program = data.repos.find(p => p.fullName === fullName);
   
-  // Try case-insensitive match
   if (!program) {
     program = data.repos.find(p => 
       p.fullName.toLowerCase() === fullName.toLowerCase()
     );
   }
   
-  // Try owner/name matching
   if (!program) {
     const [owner, name] = fullName.split('/');
     if (owner && name) {
@@ -89,9 +99,11 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
     notFound();
   }
 
+  // Fetch code snippets at build time
+  const codeFiles = await getCodeFiles(program.owner, program.name);
+
   const category = getCategoryFromProgram(program);
   
-  // Find related programs
   const relatedPrograms = data.repos
     .filter(p => 
       p.fullName !== program.fullName && 
@@ -180,6 +192,22 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
                 </div>
               </div>
             )}
+
+            {/* Code Snippet Preview */}
+            {codeFiles.length > 0 && (
+              <>
+                <Separator className="bg-border/50" />
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <FileCode className="h-5 w-5 text-violet-500" />
+                    Code Preview
+                  </h2>
+                  <CodeSnippetPreview files={codeFiles} />
+                </div>
+              </>
+            )}
+
+            <Separator className="bg-border/50" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a 
