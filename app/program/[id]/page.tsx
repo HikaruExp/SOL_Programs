@@ -24,17 +24,9 @@ interface ProgramPageProps {
   params: { id: string };
 }
 
-// Generate static params for all programs
-export async function generateStaticParams() {
-  try {
-    const data = await getProgramsData();
-    return data.repos.map((program) => ({
-      id: program.fullName,
-    }));
-  } catch {
-    return [];
-  }
-}
+// Disable static generation - use SSR with Neon DB
+export const dynamic = 'force-dynamic';
+export const revalidate = 60; // Revalidate every 60 seconds
 
 // Generate metadata for each program
 export async function generateMetadata({ params }: ProgramPageProps) {

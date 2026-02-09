@@ -7,6 +7,9 @@ import { CategoryCards } from '@/components/category-cards';
 import { getFeaturedPrograms, getCategoryCounts } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 60;
+
 // Banana icon component
 function BananaIcon({ className }: { className?: string }) {
   return (

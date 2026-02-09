@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
   images: {
     unoptimized: true,
   },
+  // Removed output: 'export' to enable SSR with Neon DB
 };
 
 export default nextConfig;
