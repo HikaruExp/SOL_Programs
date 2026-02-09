@@ -22,11 +22,15 @@ const categoryStyles: Record<string, string> = {
   'Infrastructure': 'bg-gray-50 text-gray-700 border-gray-200',
 };
 
+function toUrlId(fullName: string): string {
+  return fullName.replace(/\//g, '--');
+}
+
 export function ProgramCard({ program }: ProgramCardProps) {
   const category = getCategoryFromProgram(program);
 
   return (
-    <Link href={`/program/${encodeURIComponent(program.fullName)}`} className="block">
+    <Link href={`/program/${toUrlId(program.fullName)}`} className="block">
       <Card className="h-full card-hover cursor-pointer border border-border/50 bg-white min-h-[140px]">
         <CardHeader className="pb-2 sm:pb-3">
           <div className="flex items-start justify-between gap-2">

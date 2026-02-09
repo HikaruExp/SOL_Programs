@@ -21,6 +21,16 @@ import { formatStars, formatDate } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
 import { getCategoryFromProgram } from '@/types';
 
+// Helper to convert fullName to URL-safe id
+function toUrlId(fullName: string): string {
+  return fullName.replace(/\//g, '--');
+}
+
+// Helper to convert URL id back to fullName
+function fromUrlId(id: string): string {
+  return id.replace(/--/g, '/');
+}
+
 // Generate static params for popular programs at build time
 export function generateStaticParams() {
   const data = getProgramsData();
@@ -30,13 +40,13 @@ export function generateStaticParams() {
     .slice(0, 100);
   
   return topPrograms.map((program) => ({
-    id: encodeURIComponent(program.fullName),
+    id: toUrlId(program.fullName),
   }));
 }
 
 // Generate metadata for each program
 export function generateMetadata({ params }: { params: { id: string } }) {
-  const fullName = decodeURIComponent(params.id);
+  const fullName = fromUrlId(params.id);
   const data = getProgramsData();
   const program = data.repos.find(p => p.fullName === fullName);
   
@@ -51,7 +61,7 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 export default function ProgramPage({ params }: { params: { id: string } }) {
-  const fullName = decodeURIComponent(params.id);
+  const fullName = fromUrlId(params.id);
   const data = getProgramsData();
   
   // Find program - try exact match first
