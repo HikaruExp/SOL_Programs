@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Github, Code2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/header';
@@ -162,11 +163,12 @@ export default async function Home() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl shrink-0 overflow-hidden">
-                <img 
+              <div className="w-8 h-8 rounded-xl shrink-0 overflow-hidden relative">
+                <Image 
                   src="/logo/nano-banana.svg" 
                   alt="SOL Programs" 
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
               <span className="font-semibold text-base md:text-lg bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">SOL Programs</span>

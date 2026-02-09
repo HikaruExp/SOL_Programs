@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import {
   Star,
@@ -114,11 +115,12 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
           <div className="lg:col-span-2 space-y-6">
             <div className="animate-fade-in-up">
               <div className="flex items-start gap-3 sm:gap-4 mb-4">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20 overflow-hidden">
-                  <img 
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20 overflow-hidden relative">
+                  <Image 
                     src="/logo/nano-banana.svg" 
                     alt="SOL Programs" 
-                    className="w-8 h-8 sm:w-10 sm:h-10 object-cover"
+                    fill
+                    className="object-cover p-2 sm:p-3"
                   />
                 </div>
                 <div className="flex-1 min-w-0">

@@ -2,6 +2,7 @@
 
 import { Search, Menu, X } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -24,11 +25,12 @@ export function Header({ onSearch, searchValue = '' }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-white/90 backdrop-blur-xl">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-14 sm:h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 sm:gap-2.5 font-bold text-lg sm:text-xl min-h-[44px]">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shrink-0 overflow-hidden">
-            <img 
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shrink-0 overflow-hidden relative">
+            <Image 
               src="/logo/nano-banana.svg" 
               alt="SOL Programs" 
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
             />
           </div>
           <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent hidden sm:inline">
