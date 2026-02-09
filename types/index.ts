@@ -8,6 +8,8 @@ export interface Program {
   language: string;
   updated: string;
   topics: string[];
+  category?: string;
+  subCategory?: string;
   defaultBranch?: string;
 }
 

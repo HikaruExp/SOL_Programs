@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/program/:owner/:repo",
-      "destination": "/program/:owner%2F:repo.html"
+      "source": "/program/:id*",
+      "destination": "/program/:id*.html"
     }
   ],
   "trailingSlash": false

@@ -150,6 +150,11 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
                 <Badge variant="outline" className={`${categoryStyles[category] || categoryStyles['Infrastructure']} text-xs sm:text-sm`}>
                   {category}
                 </Badge>
+                {program.subCategory && program.subCategory !== category && (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs sm:text-sm">
+                    {program.subCategory}
+                  </Badge>
+                )}
                 {program.language && (
                   <Badge variant="secondary" className="bg-slate-100 text-slate-700 text-xs sm:text-sm">
                     {program.language}
