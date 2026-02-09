@@ -60,7 +60,7 @@ export async function getProgramsData(): Promise<ProgramsData> {
         WHERE table_name = 'programs';
       `);
       
-      const columns = columnsResult.rows.map((r: any) => r.column_name);
+      const columns = columnsResult.rows.map((r: { column_name: string }) => r.column_name);
       
       // Build query based on available columns
       const selectFields = [];
@@ -95,8 +95,20 @@ export async function getProgramsData(): Promise<ProgramsData> {
         return getFallbackData();
       }
       
-      const repos: Program[] = result.rows.map((row: any) => ({
-        fullName: row.id || (row.owner ? `${row.owner}/${row.name}` : row.name),
+      interface DbRow {
+        id?: string;
+        owner?: string;
+        name?: string;
+        url?: string;
+        description?: string;
+        stars?: number;
+        language?: string;
+        created_at?: string | Date;
+        topics?: string[];
+      }
+      
+      const repos: Program[] = result.rows.map((row: DbRow) => ({
+        fullName: row.id || (row.owner ? `${row.owner}/${row.name}` : row.name || ''),
         owner: row.owner || '',
         name: row.name || '',
         url: row.url || '',
@@ -168,8 +180,18 @@ export async function searchProgramsVector(query: string, limit = 10): Promise<P
         LIMIT $2
       `, [query, limit]);
       
-      return result.rows.map((row: any) => ({
-        fullName: row.owner ? `${row.owner}/${row.name}` : row.name,
+      interface VectorRow {
+        owner?: string;
+        name?: string;
+        url?: string;
+        description?: string;
+        stars?: number;
+        language?: string;
+        topics?: string[];
+      }
+      
+      return result.rows.map((row: VectorRow) => ({
+        fullName: row.owner ? `${row.owner}/${row.name}` : row.name || '',
         owner: row.owner || '',
         name: row.name || '',
         url: row.url || '',
