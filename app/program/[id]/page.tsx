@@ -25,9 +25,26 @@ interface ProgramPageProps {
   params: { id: string };
 }
 
-// Disable static generation - use SSR with Neon DB
-export const dynamic = 'force-dynamic';
-export const revalidate = 60; // Revalidate every 60 seconds
+// Use ISR with fallback for dynamic routes
+export const revalidate = 60;
+
+// Generate static params for popular programs at build time
+export async function generateStaticParams() {
+  try {
+    const data = await getProgramsData();
+    // Pre-build top 100 programs by stars
+    const topPrograms = data.repos
+      .sort((a, b) => b.stars - a.stars)
+      .slice(0, 100);
+    
+    return topPrograms.map((program) => ({
+      id: encodeURIComponent(program.fullName),
+    }));
+  } catch {
+    // Fallback to empty array if data fails
+    return [];
+  }
+}
 
 // Generate metadata for each program
 export async function generateMetadata({ params }: ProgramPageProps) {
