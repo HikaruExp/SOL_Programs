@@ -77,13 +77,34 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   let data: { repos: Program[] };
   try {
     data = await getProgramsData();
-  } catch {
+  } catch (error) {
+    console.error('Failed to load programs data:', error);
     notFound();
   }
   
-  const program = data.repos.find(p => p.fullName === fullName);
+  // Try exact match first, then case-insensitive
+  let program = data.repos.find(p => p.fullName === fullName);
+  
+  if (!program) {
+    program = data.repos.find(p => 
+      p.fullName.toLowerCase() === fullName.toLowerCase()
+    );
+  }
+  
+  // Try matching by owner/name separately
+  if (!program) {
+    const [owner, name] = fullName.split('/');
+    if (owner && name) {
+      program = data.repos.find(p => 
+        p.owner.toLowerCase() === owner.toLowerCase() && 
+        p.name.toLowerCase() === name.toLowerCase()
+      );
+    }
+  }
 
   if (!program) {
+    console.error(`Program not found: ${fullName}`);
+    console.error(`Available programs: ${data.repos.slice(0, 5).map(p => p.fullName).join(', ')}...`);
     notFound();
   }
 
