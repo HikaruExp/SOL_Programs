@@ -9,7 +9,6 @@ import {
   Tag,
   ArrowLeft,
   Eye,
-  Download,
   FileCode
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/header';
 import { ProgramCard } from '@/components/program-card';
 import { CodeSnippet } from '@/components/code-snippet';
+import { DownloadZipButton } from '@/components/download-zip-button';
 import { formatStars, formatDate } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
 import { getCategoryFromProgram } from '@/types';
@@ -202,15 +202,7 @@ export default function ProgramPage({ params }: { params: { id: string } }) {
                   View on GitHub
                 </Button>
               </a>
-              <a 
-                href={`https://github.com/${program.owner}/${program.name}/archive/refs/heads/main.zip`}
-                className="w-full"
-              >
-                <Button variant="outline" className="w-full gap-2 rounded-xl" size="lg">
-                  <Download className="h-4 w-4" />
-                  Download ZIP
-                </Button>
-              </a>
+              <DownloadZipButton owner={program.owner} repo={program.name} />
             </div>
 
             <Separator className="bg-border/50" />

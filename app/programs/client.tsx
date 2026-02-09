@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Header } from '@/components/header';
 import { ProgramCard } from '@/components/program-card';
 import { FilterBar } from '@/components/filter-bar';
+import { SubcategoryFilter } from '@/components/subcategory-filter';
 import { Program, Category } from '@/types';
 import {
   searchPrograms,
@@ -17,10 +18,28 @@ interface ProgramsClientProps {
   languages: string[];
 }
 
+// Get all unique subcategories from programs
+function getSubcategories(programs: Program[], category?: string): string[] {
+  const filtered = category && category !== 'All' 
+    ? programs.filter(p => p.category === category || getCategoryFromProgram(p) === category)
+    : programs;
+  
+  const subcats = new Set<string>();
+  filtered.forEach(p => {
+    if (p.subCategory) subcats.add(p.subCategory);
+  });
+  return Array.from(subcats).sort();
+}
+
+function getCategoryFromProgram(program: Program): string {
+  return program.category || 'Infrastructure';
+}
+
 export function ProgramsClient({ programs, languages }: ProgramsClientProps) {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState<Category>('All');
+  const [subcategory, setSubcategory] = useState<string>('all');
   const [language, setLanguage] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'stars' | 'updated' | 'name'>('stars');
   const [mounted, setMounted] = useState(false);
@@ -33,6 +52,15 @@ export function ProgramsClient({ programs, languages }: ProgramsClientProps) {
     }
     setMounted(true);
   }, [searchParams]);
+
+  // Reset subcategory when category changes
+  useEffect(() => {
+    setSubcategory('all');
+  }, [category]);
+
+  const availableSubcategories = useMemo(() => {
+    return getSubcategories(programs, category === 'All' ? undefined : category);
+  }, [programs, category]);
 
   const filteredPrograms = useMemo(() => {
     let result = programs;
@@ -48,11 +76,16 @@ export function ProgramsClient({ programs, languages }: ProgramsClientProps) {
       language: language === 'all' ? undefined : language,
     });
 
+    // Apply subcategory filter
+    if (subcategory !== 'all') {
+      result = result.filter(p => p.subCategory === subcategory);
+    }
+
     // Apply sorting
     result = sortPrograms(result, sortBy);
 
     return result;
-  }, [programs, searchQuery, category, language, sortBy]);
+  }, [programs, searchQuery, category, subcategory, language, sortBy]);
 
   if (!mounted) {
     return (
@@ -100,6 +133,15 @@ export function ProgramsClient({ programs, languages }: ProgramsClientProps) {
           languages={languages}
           resultCount={filteredPrograms.length}
         />
+
+        {/* Subcategory Filter */}
+        {availableSubcategories.length > 0 && (
+          <SubcategoryFilter
+            subcategories={availableSubcategories}
+            selected={subcategory}
+            onSelect={setSubcategory}
+          />
+        )}
 
         <div className="mt-8">
           {filteredPrograms.length === 0 ? (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchRepoCode, RepoFile } from '@/lib/fetch-code';
 
@@ -15,6 +15,7 @@ export function CodeSnippet({ owner, repo }: CodeSnippetProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function loadCode() {
@@ -29,6 +30,16 @@ export function CodeSnippet({ owner, repo }: CodeSnippetProps) {
     }
     loadCode();
   }, [owner, repo]);
+
+  const handleCopy = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      console.warn('Failed to copy to clipboard');
+    }
+  };
 
   if (loading) {
     return (
@@ -59,12 +70,26 @@ export function CodeSnippet({ owner, repo }: CodeSnippetProps) {
         <h3 className="text-sm font-medium text-muted-foreground">
           {mainFile.name}
         </h3>
-        <span className="text-xs text-muted-foreground capitalize">
-          {mainFile.language}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground capitalize">
+            {mainFile.language}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => handleCopy(mainFile.content)}
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
       
-      <div className="relative">
+      <div className="relative group">
         <pre className="bg-slate-900 text-slate-50 p-4 rounded-lg overflow-x-auto text-xs leading-relaxed max-h-[300px] overflow-y-auto font-mono">
           <code>{displayLines.join('\n')}</code>
         </pre>
