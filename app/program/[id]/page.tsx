@@ -19,79 +19,52 @@ import { Header } from '@/components/header';
 import { ProgramCard } from '@/components/program-card';
 import { formatStars, formatDate } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
-import { getCategoryFromProgram, Program } from '@/types';
-
-interface ProgramPageProps {
-  params: { id: string };
-}
-
-// Use ISR with fallback for dynamic routes
-export const revalidate = 60;
+import { getCategoryFromProgram } from '@/types';
 
 // Generate static params for popular programs at build time
-export async function generateStaticParams() {
-  try {
-    const data = await getProgramsData();
-    // Pre-build top 100 programs by stars
-    const topPrograms = data.repos
-      .sort((a, b) => b.stars - a.stars)
-      .slice(0, 100);
-    
-    return topPrograms.map((program) => ({
-      id: encodeURIComponent(program.fullName),
-    }));
-  } catch {
-    // Fallback to empty array if data fails
-    return [];
-  }
+export function generateStaticParams() {
+  const data = getProgramsData();
+  // Pre-build top 100 programs by stars
+  const topPrograms = data.repos
+    .sort((a, b) => b.stars - a.stars)
+    .slice(0, 100);
+  
+  return topPrograms.map((program) => ({
+    id: encodeURIComponent(program.fullName),
+  }));
 }
 
 // Generate metadata for each program
-export async function generateMetadata({ params }: ProgramPageProps) {
+export function generateMetadata({ params }: { params: { id: string } }) {
   const fullName = decodeURIComponent(params.id);
+  const data = getProgramsData();
+  const program = data.repos.find(p => p.fullName === fullName);
   
-  try {
-    const data = await getProgramsData();
-    const program = data.repos.find(p => p.fullName === fullName);
-    
-    if (!program) {
-      return {
-        title: 'Program Not Found',
-      };
-    }
-    
-    return {
-      title: `${program.name} | Solana Programs Directory`,
-      description: program.description || `View ${program.name} on Solana Programs Directory`,
-    };
-  } catch {
-    return {
-      title: 'Program Details',
-    };
+  if (!program) {
+    return { title: 'Program Not Found' };
   }
+  
+  return {
+    title: `${program.name} | Solana Programs Directory`,
+    description: program.description || `View ${program.name} on Solana Programs Directory`,
+  };
 }
 
-export default async function ProgramPage({ params }: ProgramPageProps) {
+export default function ProgramPage({ params }: { params: { id: string } }) {
   const fullName = decodeURIComponent(params.id);
+  const data = getProgramsData();
   
-  let data: { repos: Program[] };
-  try {
-    data = await getProgramsData();
-  } catch (error) {
-    console.error('Failed to load programs data:', error);
-    notFound();
-  }
-  
-  // Try exact match first, then case-insensitive
+  // Find program - try exact match first
   let program = data.repos.find(p => p.fullName === fullName);
   
+  // Try case-insensitive match
   if (!program) {
     program = data.repos.find(p => 
       p.fullName.toLowerCase() === fullName.toLowerCase()
     );
   }
   
-  // Try matching by owner/name separately
+  // Try owner/name matching
   if (!program) {
     const [owner, name] = fullName.split('/');
     if (owner && name) {
@@ -103,14 +76,12 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
   }
 
   if (!program) {
-    console.error(`Program not found: ${fullName}`);
-    console.error(`Available programs: ${data.repos.slice(0, 5).map(p => p.fullName).join(', ')}...`);
     notFound();
   }
 
   const category = getCategoryFromProgram(program);
   
-  // Find related programs (same category, excluding current)
+  // Find related programs
   const relatedPrograms = data.repos
     .filter(p => 
       p.fullName !== program.fullName && 
@@ -134,11 +105,7 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
 
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-violet-50/50 via-white to-purple-50/30 -z-10 pointer-events-none" />
-
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 flex-1">
-        {/* Back Link */}
         <Link href="/programs" className="inline-block px-2 sm:px-0">
           <Button variant="ghost" className="mb-4 sm:mb-6 gap-2 pl-0 hover:pl-2 transition-all rounded-full text-sm sm:text-base min-h-[44px]">
             <ArrowLeft className="h-4 w-4" />
@@ -147,11 +114,9 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
           </Button>
         </Link>
 
-        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 px-2 sm:px-0">
-          {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="animate-fade-in-up">
+            <div>
               <div className="flex items-start gap-3 sm:gap-4 mb-4">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20 overflow-hidden relative">
                   <Image 
@@ -190,9 +155,8 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
 
             <Separator className="bg-border/50" />
 
-            {/* Topics */}
             {program.topics.length > 0 && (
-              <div className="animate-fade-in-up stagger-1" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+              <div>
                 <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <Tag className="h-5 w-5 text-violet-500" />
                   Topics
@@ -207,8 +171,7 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in-up stagger-2" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a 
                 href={`https://github.com/${program.owner}/${program.name}`}
                 target="_blank"
@@ -233,13 +196,11 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
 
             <Separator className="bg-border/50" />
 
-            {/* GitHub Link */}
             <a 
               href={program.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="block animate-fade-in-up stagger-3"
-              style={{ opacity: 0, animationFillMode: 'forwards' }}
+              className="block"
             >
               <Button className="w-full gap-2 btn-shine rounded-xl" size="lg">
                 <ExternalLink className="h-4 w-4" />
@@ -248,9 +209,8 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
             </a>
           </div>
 
-          {/* Right Column - Stats */}
           <div className="space-y-6">
-            <Card className="border border-border/50 shadow-sm animate-fade-in-up">
+            <Card className="border border-border/50 shadow-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg">Repository Stats</CardTitle>
               </CardHeader>
@@ -283,9 +243,8 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
               </CardContent>
             </Card>
 
-            {/* Related Programs */}
             {relatedPrograms.length > 0 && (
-              <div className="animate-fade-in-up stagger-1" style={{ opacity: 0, animationFillMode: 'forwards' }}>
+              <div>
                 <h3 className="text-lg font-semibold mb-4">Related Programs</h3>
                 <div className="space-y-4">
                   {relatedPrograms.map((related) => (
@@ -298,7 +257,6 @@ export default async function ProgramPage({ params }: ProgramPageProps) {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border/50 py-8 md:py-12 mt-auto bg-slate-50/50 w-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-xs sm:text-sm text-muted-foreground">

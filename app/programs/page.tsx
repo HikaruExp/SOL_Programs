@@ -1,20 +1,26 @@
 import { Suspense } from 'react';
-import { ProgramsClient } from './client';
-import { getAllLanguages } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
+import { getAllLanguages } from '@/lib/data';
+import { ProgramsClient } from './client';
 
 export const revalidate = 60;
 
-export default async function ProgramsPage() {
-  const data = await getProgramsData();
+function ProgramsContent() {
+  const data = getProgramsData();
   const languages = getAllLanguages(data.repos);
 
   return (
+    <ProgramsClient
+      programs={data.repos}
+      languages={languages}
+    />
+  );
+}
+
+export default function ProgramsPage() {
+  return (
     <Suspense fallback={<div className="min-h-screen bg-background" />}>
-      <ProgramsClient
-        programs={data.repos}
-        languages={languages}
-      />
+      <ProgramsContent />
     </Suspense>
   );
 }

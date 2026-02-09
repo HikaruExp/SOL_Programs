@@ -30,8 +30,8 @@ function BananaIcon({ className }: { className?: string }) {
   );
 }
 
-export default async function Home() {
-  const data = await getProgramsData();
+export default function Home() {
+  const data = getProgramsData();
   const featuredPrograms = getFeaturedPrograms(data.repos);
   const categoryCounts = getCategoryCounts(data.repos);
 
