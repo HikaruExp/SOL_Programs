@@ -1,29 +1,80 @@
 {
-  "lastRun": "2026-02-09T12:28:50.778Z",
-  "totalPrograms": 1389,
-  "newProgramsThisRun": 0,
-  "queriesUsed": [
-    "solana defi protocol stars:>50",
-    "solana program anchor rust stars:>50",
-    "solana governance dao stars:>50",
-    "solana staking validator stars:>50",
-    "solana lending protocol stars:>50",
-    "solana dex amm stars:>50",
-    "solana infrastructure sdk stars:>50",
-    "solana trading bot stars:>50",
-    "solana anchor lang stars:>50",
-    "solana nft contract stars:>50"
+  "startTime": "2026-02-09T12:32:47.689Z",
+  "queries": [
+    {
+      "query": "solana+metaplex",
+      "found": 24,
+      "newValid": 14
+    },
+    {
+      "query": "solana+jupiter+aggregator",
+      "found": 3,
+      "newValid": 2
+    },
+    {
+      "query": "solana+anchor+lang",
+      "found": 1,
+      "newValid": 0
+    },
+    {
+      "query": "solana+trading+bot",
+      "found": 70,
+      "newValid": 40
+    }
   ],
-  "errors": [
-    "Query \"solana defi protocol stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana program anchor rust stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana governance dao stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana staking validator stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana lending protocol stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana dex amm stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana infrastructure sdk stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana trading bot stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana anchor lang stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n",
-    "Query \"solana nft contract stars:>50\" failed: gh command failed: To get started with GitHub CLI, please run:  gh auth login\nAlternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.\n"
-  ]
+  "newPrograms": [
+    "metaplex-foundation/js",
+    "kevinfaveri/solana-candy-factory",
+    "theskeletoncrew/treat-toolbox",
+    "metaplex-foundation/solita",
+    "lukejmann/MintUI",
+    "machenxi/solanaArtGuard-AI-nft-marketplace",
+    "solana-developers/compressed-nfts",
+    "AudiusProject/fetch-nft",
+    "256hax/solana-anchor-react-minimal-example",
+    "metaplex-foundation/js-examples",
+    "degenfrends/solana-rugchecker",
+    "wonka-labs/wonka-js",
+    "mattdeco/nft-vending-machine",
+    "edceds/solana-mint-ui",
+    "0xalberto/jupiter-arbitrage-bot",
+    "mooncitydev/solana-arbitrage-bot-master",
+    "warp-id/solana-trading-bot",
+    "insionCEO/Solana-Arbitrage-Bot",
+    "outsmartchad/solana-trading-cli",
+    "WSOL12/Solana-Arbitrage-Bot",
+    "radioman/solana-copy-trading-bot",
+    "katlogic/solana-trading-bot",
+    "zookyy/crypto-sniper",
+    "HyperBuildX/Polymarket-Trading-Bot-Rust",
+    "TreeCityWes/Pump-Fun-Trading-Bot-Solana",
+    "insionCEO/solana-sniper-copy-mev-trading-bot",
+    "pio-ne-er/RUST-Polymarket-Trading-Bot-Set",
+    "Tru3Bliss/solana-token-bundler-pumpfun-pump.fun-bonkfun-bonk.fun",
+    "Rabnail-SOL/Solana-Raydium-Volume-Bot",
+    "hanshaze/solana-sniper-copy-trading-bot",
+    "pio-ne-er/Polymarket-RSI-MACD-Momentum-Trading-Bot",
+    "YZYLAB/solana-trade-bot",
+    "Jackhuang166/Pumpfun_AI_Trading_Bot",
+    "0xRustPro/solana-grpc-sniper-bundler-bot",
+    "rustyneuron01/Volume-Bundler-Sniping-Copy-Trading-Bot-Rust",
+    "0xalberto/solana-raydium-pumpfun-sniper-Rust",
+    "machenxi/meteora-sniper-bot",
+    "metaggdev/Copy-trading-bot",
+    "DangerAcorn/pumpfun-tools",
+    "lorine93s/grpc-copytrading-sniper-bot",
+    "cryptole0/Copy-Trading-Bot-Rust",
+    "gianlucamazza/solana-mmaker",
+    "ElliteAnts/Pumpfun-Volume-Bot",
+    "cryptole0/Solana_Raydium_Volume_Bot",
+    "ApexArb/Solana-Arbitrage-Trading-Bot",
+    "lorine93s/pumpfun-raydium-sniper-rust-bot",
+    "Jackhuang166/grpc-copy-trading-sniper-farm-bot",
+    "mhuzaifah/Auto-Sniper-Sol-Trading-Bot",
+    "roswelly/solana-grpc-copy-trading-bot",
+    "Joko588/Solana-Raydium-Sniper-Bot-2025"
+  ],
+  "errors": [],
+  "endTime": "2026-02-09T12:33:00.601Z",
+  "totalNew": 50
 }
