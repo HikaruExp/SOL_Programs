@@ -18,11 +18,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Header } from '@/components/header';
 import { ProgramCard } from '@/components/program-card';
-import { CodeSnippetPreview } from '@/components/code-snippet-preview';
+import { CodeSnippet } from '@/components/code-snippet';
 import { formatStars, formatDate } from '@/lib/data';
 import { getProgramsData } from '@/lib/data-server';
 import { getCategoryFromProgram } from '@/types';
-import { fetchRepoCode, RepoFile } from '@/lib/fetch-code';
 
 // Helper to convert fullName to URL-safe id
 function toUrlId(fullName: string): string {
@@ -62,18 +61,7 @@ export function generateMetadata({ params }: { params: { id: string } }) {
   };
 }
 
-// Fetch code files at build time
-async function getCodeFiles(owner: string, repo: string): Promise<RepoFile[]> {
-  try {
-    const repoContent = await fetchRepoCode(owner, repo);
-    return repoContent.files.slice(0, 5); // Get top 5 files
-  } catch (error) {
-    console.warn(`Failed to fetch code for ${owner}/${repo}:`, error);
-    return [];
-  }
-}
-
-export default async function ProgramPage({ params }: { params: { id: string } }) {
+export default function ProgramPage({ params }: { params: { id: string } }) {
   const fullName = fromUrlId(params.id);
   const data = getProgramsData();
   
@@ -98,9 +86,6 @@ export default async function ProgramPage({ params }: { params: { id: string } }
   if (!program) {
     notFound();
   }
-
-  // Fetch code snippets at build time
-  const codeFiles = await getCodeFiles(program.owner, program.name);
 
   const category = getCategoryFromProgram(program);
   
@@ -193,19 +178,15 @@ export default async function ProgramPage({ params }: { params: { id: string } }
               </div>
             )}
 
-            {/* Code Snippet Preview */}
-            {codeFiles.length > 0 && (
-              <>
-                <Separator className="bg-border/50" />
-                <div>
-                  <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <FileCode className="h-5 w-5 text-violet-500" />
-                    Code Preview
-                  </h2>
-                  <CodeSnippetPreview files={codeFiles} />
-                </div>
-              </>
-            )}
+            {/* Code Preview - Client Side */}
+            <Separator className="bg-border/50" />
+            <div>
+              <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <FileCode className="h-5 w-5 text-violet-500" />
+                Code Preview
+              </h2>
+              <CodeSnippet owner={program.owner} repo={program.name} />
+            </div>
 
             <Separator className="bg-border/50" />
 
