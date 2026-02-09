@@ -1,5 +1,6 @@
 import { Pool } from '@neondatabase/serverless';
 import { ProgramsData, Program } from '@/types';
+import rawData from '@/data/github-solana-programs.json';
 
 // Neon DB connection
 const pool = new Pool({
@@ -10,14 +11,80 @@ let cachedData: ProgramsData | null = null;
 let lastFetch = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Fallback data for when DB is not available
+// Get fallback data from JSON file
 function getFallbackData(): ProgramsData {
-  return {
-    scrapedAt: new Date().toISOString(),
-    totalRepos: 0,
-    keywordsSearched: [],
-    repos: [],
-  };
+  return rawData as ProgramsData;
+}
+
+// Initialize database with schema if needed
+async function initDatabase(client: any) {
+  try {
+    // Enable pgvector extension
+    await client.query('CREATE EXTENSION IF NOT EXISTS vector;');
+    
+    // Create programs table if not exists
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS programs (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        description_embedding VECTOR(384),
+        category TEXT[],
+        repo_url TEXT,
+        owner TEXT,
+        language TEXT,
+        stars INTEGER DEFAULT 0,
+        topics TEXT[],
+        source_file TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    
+    // Create indexes
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_programs_stars ON programs(stars DESC);
+      CREATE INDEX IF NOT EXISTS idx_programs_category ON programs USING GIN(category);
+      CREATE INDEX IF NOT EXISTS idx_programs_topics ON programs USING GIN(topics);
+    `);
+    
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Error initializing database:', error);
+  }
+}
+
+// Seed database from JSON if empty
+async function seedDatabaseIfEmpty(client: any) {
+  try {
+    const countResult = await client.query('SELECT COUNT(*) FROM programs;');
+    const count = parseInt(countResult.rows[0].count);
+    
+    if (count === 0) {
+      console.log('Seeding database from JSON...');
+      const data = rawData as ProgramsData;
+      
+      for (const repo of data.repos.slice(0, 100)) { // Seed first 100 for now
+        await client.query(`
+          INSERT INTO programs (id, name, description, repo_url, owner, language, stars, topics)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (id) DO NOTHING;
+        `, [
+          repo.fullName,
+          repo.name,
+          repo.description,
+          repo.url,
+          repo.owner,
+          repo.language,
+          repo.stars,
+          repo.topics || []
+        ]);
+      }
+      
+      console.log(`Seeded ${Math.min(100, data.repos.length)} programs`);
+    }
+  } catch (error) {
+    console.error('Error seeding database:', error);
+  }
 }
 
 export async function getProgramsData(): Promise<ProgramsData> {
@@ -29,7 +96,13 @@ export async function getProgramsData(): Promise<ProgramsData> {
   try {
     const client = await pool.connect();
     try {
-      // Check if programs table exists
+      // Initialize database if needed
+      await initDatabase(client);
+      
+      // Seed with data if empty
+      await seedDatabaseIfEmpty(client);
+      
+      // Check if programs table exists and has data
       const tableCheck = await client.query(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables 
@@ -38,7 +111,7 @@ export async function getProgramsData(): Promise<ProgramsData> {
       `);
       
       if (!tableCheck.rows[0].exists) {
-        console.log('Programs table does not exist, returning fallback data');
+        console.log('Programs table does not exist, using JSON fallback');
         return getFallbackData();
       }
       
@@ -49,8 +122,7 @@ export async function getProgramsData(): Promise<ProgramsData> {
         WHERE table_name = 'programs';
       `);
       
-      const columns = columnsResult.rows.map(r => r.column_name);
-      console.log('Available columns:', columns);
+      const columns = columnsResult.rows.map((r: any) => r.column_name);
       
       // Build query based on available columns
       const selectFields = [];
@@ -76,7 +148,12 @@ export async function getProgramsData(): Promise<ProgramsData> {
         ORDER BY stars DESC NULLS LAST
       `);
       
-      const repos: Program[] = result.rows.map(row => ({
+      // If no data in DB, use fallback
+      if (result.rows.length === 0) {
+        return getFallbackData();
+      }
+      
+      const repos: Program[] = result.rows.map((row: any) => ({
         fullName: row.owner ? `${row.owner}/${row.name}` : row.name || row.id,
         owner: row.owner || '',
         name: row.name || row.id || '',
@@ -144,7 +221,7 @@ export async function searchProgramsVector(query: string, limit = 10): Promise<P
         LIMIT $2
       `, [query, limit]);
       
-      return result.rows.map(row => ({
+      return result.rows.map((row: any) => ({
         fullName: row.owner ? `${row.owner}/${row.name}` : row.name || row.id,
         owner: row.owner || '',
         name: row.name || '',
