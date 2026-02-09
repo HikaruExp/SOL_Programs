@@ -10,6 +10,16 @@ let cachedData: ProgramsData | null = null;
 let lastFetch = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Fallback data for when DB is not available
+function getFallbackData(): ProgramsData {
+  return {
+    scrapedAt: new Date().toISOString(),
+    totalRepos: 0,
+    keywordsSearched: [],
+    repos: [],
+  };
+}
+
 export async function getProgramsData(): Promise<ProgramsData> {
   // Return cached data if fresh
   if (cachedData && Date.now() - lastFetch < CACHE_TTL) {
@@ -19,49 +29,63 @@ export async function getProgramsData(): Promise<ProgramsData> {
   try {
     const client = await pool.connect();
     try {
+      // Check if programs table exists
+      const tableCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'programs'
+        );
+      `);
+      
+      if (!tableCheck.rows[0].exists) {
+        console.log('Programs table does not exist, returning fallback data');
+        return getFallbackData();
+      }
+      
+      // Get column names to build dynamic query
+      const columnsResult = await client.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'programs';
+      `);
+      
+      const columns = columnsResult.rows.map(r => r.column_name);
+      console.log('Available columns:', columns);
+      
+      // Build query based on available columns
+      const selectFields = [];
+      if (columns.includes('id')) selectFields.push('id');
+      if (columns.includes('name')) selectFields.push('name');
+      if (columns.includes('description')) selectFields.push('description');
+      if (columns.includes('repo_url')) selectFields.push('repo_url as url');
+      if (columns.includes('owner')) selectFields.push('owner');
+      if (columns.includes('language')) selectFields.push('language');
+      if (columns.includes('stars')) selectFields.push('stars');
+      if (columns.includes('topics')) selectFields.push('topics');
+      if (columns.includes('category')) selectFields.push('category');
+      if (columns.includes('created_at')) selectFields.push('created_at');
+      
+      if (selectFields.length === 0) {
+        return getFallbackData();
+      }
+      
       // Query programs from Neon DB
       const result = await client.query(`
-        SELECT 
-          id,
-          name,
-          description,
-          repo_url as url,
-          repo_owner as "owner",
-          repo_name as "name",
-          language,
-          stars,
-          forks,
-          open_issues as "openIssues",
-          last_updated as "updated",
-          created_at as "createdAt",
-          topics,
-          category,
-          program_id as "programId",
-          is_verified as "isVerified",
-          has_anchor as "hasAnchor",
-          has_tests as "hasTests"
+        SELECT ${selectFields.join(', ')}
         FROM programs 
-        ORDER BY stars DESC
+        ORDER BY stars DESC NULLS LAST
       `);
       
       const repos: Program[] = result.rows.map(row => ({
-        fullName: `${row.owner}/${row.name}`,
-        owner: row.owner,
-        name: row.name,
-        url: row.url,
-        description: row.description,
+        fullName: row.owner ? `${row.owner}/${row.name}` : row.name || row.id,
+        owner: row.owner || '',
+        name: row.name || row.id || '',
+        url: row.url || '',
+        description: row.description || '',
         stars: row.stars || 0,
-        language: row.language,
-        updated: row.updated?.toISOString() || new Date().toISOString(),
-        createdAt: row.createdAt?.toISOString(),
-        forks: row.forks || 0,
-        openIssues: row.openIssues || 0,
+        language: row.language || 'Unknown',
+        updated: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
         topics: row.topics || [],
-        category: row.category || [],
-        programId: row.programId,
-        isVerified: row.isVerified || false,
-        hasAnchor: row.hasAnchor || false,
-        hasTests: row.hasTests || false,
       }));
       
       cachedData = {
@@ -78,9 +102,8 @@ export async function getProgramsData(): Promise<ProgramsData> {
     }
   } catch (error) {
     console.error('Database error:', error);
-    // Fallback to cached data or empty result
-    if (cachedData) return cachedData;
-    throw error;
+    // Return fallback data on error
+    return getFallbackData();
   }
 }
 
@@ -89,6 +112,19 @@ export async function searchProgramsVector(query: string, limit = 10): Promise<P
   try {
     const client = await pool.connect();
     try {
+      // Check if description_embedding column exists
+      const colCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns 
+          WHERE table_name = 'programs' AND column_name = 'description_embedding'
+        );
+      `);
+      
+      if (!colCheck.rows[0].exists) {
+        console.log('Vector search not available - no embedding column');
+        return [];
+      }
+      
       // Using pgvector for similarity search
       const result = await client.query(`
         SELECT 
@@ -96,45 +132,28 @@ export async function searchProgramsVector(query: string, limit = 10): Promise<P
           name,
           description,
           repo_url as url,
-          repo_owner as "owner",
-          repo_name as "name",
+          owner,
           language,
           stars,
-          forks,
-          open_issues as "openIssues",
-          last_updated as "updated",
-          created_at as "createdAt",
           topics,
           category,
-          program_id as "programId",
-          is_verified as "isVerified",
-          has_anchor as "hasAnchor",
-          has_tests as "hasTests",
-          1 - (description_vector <=> $1::vector) as similarity
+          1 - (description_embedding <=> $1::vector) as similarity
         FROM programs
-        WHERE description_vector IS NOT NULL
-        ORDER BY description_vector <=> $1::vector
+        WHERE description_embedding IS NOT NULL
+        ORDER BY description_embedding <=> $1::vector
         LIMIT $2
       `, [query, limit]);
       
       return result.rows.map(row => ({
-        fullName: `${row.owner}/${row.name}`,
-        owner: row.owner,
-        name: row.name,
-        url: row.url,
-        description: row.description,
+        fullName: row.owner ? `${row.owner}/${row.name}` : row.name || row.id,
+        owner: row.owner || '',
+        name: row.name || '',
+        url: row.url || '',
+        description: row.description || '',
         stars: row.stars || 0,
-        language: row.language,
-        updated: row.updated?.toISOString() || new Date().toISOString(),
-        createdAt: row.createdAt?.toISOString(),
-        forks: row.forks || 0,
-        openIssues: row.openIssues || 0,
+        language: row.language || 'Unknown',
+        updated: new Date().toISOString(),
         topics: row.topics || [],
-        category: row.category || [],
-        programId: row.programId,
-        isVerified: row.isVerified || false,
-        hasAnchor: row.hasAnchor || false,
-        hasTests: row.hasTests || false,
       }));
     } finally {
       client.release();
