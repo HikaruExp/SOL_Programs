@@ -1,20 +1,19 @@
 import { ProgramsData, Program } from '@/types';
-import rawData from '@/data/github-solana-programs.json';
+import { getProgramsData as getFromDB, getProgramsDataFromJSON } from './db';
 
-// Simple synchronous data access
-export function getProgramsData(): ProgramsData {
-  const repos = (rawData as { repos: Program[] }).repos;
-  return {
-    repos,
-    totalRepos: repos.length,
-    scrapedAt: new Date().toISOString(),
-    keywordsSearched: []
-  };
+// Primary: Try DB first, fallback to JSON
+export async function getProgramsData(): Promise<ProgramsData> {
+  return getFromDB();
 }
 
-// Simple search function
+// Sync version for build time (uses JSON)
+export function getProgramsDataSync(): ProgramsData {
+  return getProgramsDataFromJSON();
+}
+
+// Simple search function (uses sync version for now)
 export function searchPrograms(query: string): Program[] {
-  const data = getProgramsData();
+  const data = getProgramsDataSync();
   const lowerQuery = query.toLowerCase();
   
   return data.repos.filter(p => 

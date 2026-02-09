@@ -23,13 +23,18 @@ export function CodeViewer({ owner, repo }: CodeViewerProps) {
   useEffect(() => {
     async function loadCode() {
       try {
+        console.log(`[CodeViewer] Loading code for ${owner}/${repo}...`);
         const repoContent = await fetchRepoCode(owner, repo);
+        console.log(`[CodeViewer] Found ${repoContent.files.length} files`);
         setFiles(repoContent.files);
         if (repoContent.files.length > 0) {
           setSelectedFile(0);
+        } else {
+          setError('No code files found in this repository');
         }
-      } catch {
-        setError('Failed to load code preview');
+      } catch (err) {
+        console.error('[CodeViewer] Error loading code:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load code preview');
       } finally {
         setLoading(false);
       }

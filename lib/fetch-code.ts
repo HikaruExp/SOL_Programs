@@ -59,6 +59,7 @@ function getLanguageFromExtension(filename: string): string {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchGitHubAPI(url: string): Promise<Record<string, unknown> | unknown[]> {
+  console.log(`[fetch-code] Fetching: ${url}`);
   const headers: HeadersInit = {
     'Accept': 'application/vnd.github.v3+json',
     'User-Agent': 'Solana-Programs-Directory'
@@ -67,6 +68,7 @@ async function fetchGitHubAPI(url: string): Promise<Record<string, unknown> | un
   const response = await fetch(url, { headers });
 
   if (!response.ok) {
+    console.error(`[fetch-code] GitHub API error: ${response.status} for ${url}`);
     if (response.status === 404) {
       throw new Error('Repository not found');
     }
@@ -169,16 +171,24 @@ async function findCodeFiles(
 }
 
 export async function fetchRepoCode(owner: string, repo: string): Promise<RepoContent> {
+  console.log(`[fetch-code] Starting fetch for ${owner}/${repo}`);
   const cacheKey = generateCacheKey(owner, repo, 'code');
 
   // Check cache first
   const cached = await getCachedData<RepoContent>(cacheKey);
-  if (cached) {
+  if (cached && cached.files.length > 0) {
+    console.log(`[fetch-code] Using cached data with ${cached.files.length} files`);
     return cached;
   }
 
   // Find code files in the repository
   const fileTree = await findCodeFiles(owner, repo);
+  console.log(`[fetch-code] Found ${fileTree.length} code files`);
+
+  if (fileTree.length === 0) {
+    console.warn(`[fetch-code] No code files found in ${owner}/${repo}`);
+    throw new Error('No code files found in repository');
+  }
 
   // Fetch content for each file
   const files: RepoFile[] = [];
@@ -194,9 +204,15 @@ export async function fetchRepoCode(owner: string, repo: string): Promise<RepoCo
         content,
         language: getLanguageFromExtension(file.name)
       });
+      console.log(`[fetch-code] Fetched ${file.path} (${content.length} bytes)`);
     } catch (error) {
-      console.warn(`Failed to fetch ${file.path}:`, error);
+      console.warn(`[fetch-code] Failed to fetch ${file.path}:`, error);
     }
+  }
+
+  if (files.length === 0) {
+    console.error(`[fetch-code] Could not fetch any file content for ${owner}/${repo}`);
+    throw new Error('Could not fetch code files from repository');
   }
 
   const result: RepoContent = {
@@ -209,6 +225,7 @@ export async function fetchRepoCode(owner: string, repo: string): Promise<RepoCo
 
   // Cache the result
   await setCachedData(cacheKey, result);
+  console.log(`[fetch-code] Completed, cached ${files.length} files`);
 
   return result;
 }

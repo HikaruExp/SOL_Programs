@@ -19,7 +19,7 @@ import { ProgramCard } from '@/components/program-card';
 import { CodeViewer } from '@/components/code-viewer';
 import { DownloadZipButton } from '@/components/download-zip-button';
 import { formatStars, formatDate } from '@/lib/data';
-import { getProgramsData } from '@/lib/data-server';
+import { getProgramsData, getProgramsDataSync } from '@/lib/data-server';
 import { getCategoryFromProgram } from '@/types';
 
 // Helper to convert fullName to URL-safe id
@@ -34,7 +34,7 @@ function fromUrlId(id: string): string {
 
 // Generate static params for popular programs at build time
 export function generateStaticParams() {
-  const data = getProgramsData();
+  const data = getProgramsDataSync();
   const topPrograms = data.repos
     .sort((a, b) => b.stars - a.stars)
     .slice(0, 100);
@@ -47,7 +47,7 @@ export function generateStaticParams() {
 // Generate metadata for each program
 export function generateMetadata({ params }: { params: { id: string } }) {
   const fullName = fromUrlId(params.id);
-  const data = getProgramsData();
+  const data = getProgramsDataSync();
   const program = data.repos.find(p => p.fullName === fullName);
   
   if (!program) {
@@ -60,9 +60,9 @@ export function generateMetadata({ params }: { params: { id: string } }) {
   };
 }
 
-export default function ProgramPage({ params }: { params: { id: string } }) {
+export default async function ProgramPage({ params }: { params: { id: string } }) {
   const fullName = fromUrlId(params.id);
-  const data = getProgramsData();
+  const data = await getProgramsData();
   
   let program = data.repos.find(p => p.fullName === fullName);
   

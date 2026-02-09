@@ -23,7 +23,13 @@ function isBuildTime(): boolean {
 // Get data from JSON (fallback)
 export function getProgramsDataFromJSON(): ProgramsData {
   if (!cachedData || Date.now() - cacheTime > CACHE_TTL) {
-    cachedData = rawData as ProgramsData;
+    const repos = (rawData as { repos: Program[] }).repos || [];
+    cachedData = {
+      repos,
+      totalRepos: repos.length,
+      scrapedAt: new Date().toISOString(),
+      keywordsSearched: []
+    };
     cacheTime = Date.now();
   }
   return cachedData;

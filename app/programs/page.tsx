@@ -5,8 +5,8 @@ import { ProgramsClient } from './client';
 
 export const revalidate = 60;
 
-function ProgramsContent() {
-  const data = getProgramsData();
+async function ProgramsContent() {
+  const data = await getProgramsData();
   const languages = getAllLanguages(data.repos);
 
   return (
