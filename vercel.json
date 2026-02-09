@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    {
+      "source": "/program/:owner/:repo",
+      "destination": "/program/:owner%2F:repo.html"
+    }
+  ],
+  "trailingSlash": false
+}
