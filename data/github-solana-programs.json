@@ -25019,6 +25019,68 @@
       "category": "NFT",
       "subCategory": "SDK",
       "discoveredAt": "2026-02-10T00:17:02.861Z"
+    },
+    {
+      "fullName": "x89/Solana-Arbitrage-Bot",
+      "owner": "x89",
+      "name": "Solana-Arbitrage-Bot",
+      "url": "https://github.com/x89/Solana-Arbitrage-Bot",
+      "description": "https://t.me/githubx89 Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot Solana Arbitrage Bot",
+      "stars": 1136,
+      "language": "Rust",
+      "updated": "2026-02-10T10:36:51Z",
+      "topics": [
+        "arbitrage",
+        "block-engine",
+        "blockchain",
+        "bot",
+        "crypto",
+        "grpc",
+        "mev",
+        "solana",
+        "trading",
+        "yellowstone"
+      ],
+      "defaultBranch": "master",
+      "category": "Trading",
+      "subCategory": "Trading Bot",
+      "discoveredAt": "2026-02-10T18:16:46.619Z"
+    },
+    {
+      "fullName": "smolmusk/solana-clamm-core",
+      "owner": "smolmusk",
+      "name": "solana-clamm-core",
+      "url": "https://github.com/smolmusk/solana-clamm-core",
+      "description": "CLAMM Core (Similar to Orca (Whirlpools), but inspired from Stryke Protocol on EVM)",
+      "stars": 167,
+      "language": "Rust",
+      "updated": "2025-11-25T21:12:57Z",
+      "topics": [
+        "clamm",
+        "defi",
+        "orca",
+        "solana",
+        "stryke"
+      ],
+      "defaultBranch": "main",
+      "category": "DEX",
+      "subCategory": "Orca",
+      "discoveredAt": "2026-02-10T18:17:02.082Z"
+    },
+    {
+      "fullName": "1sol-io/1sol-protocol",
+      "owner": "1sol-io",
+      "name": "1sol-protocol",
+      "url": "https://github.com/1sol-io/1sol-protocol",
+      "description": "An innovative Cross-Chain DeFi Aggregator on SOLANA and more",
+      "stars": 57,
+      "language": "Rust",
+      "updated": "2025-08-09T14:54:05Z",
+      "topics": [],
+      "defaultBranch": "master",
+      "category": "DeFi",
+      "subCategory": "DeFi",
+      "discoveredAt": "2026-02-10T18:17:02.082Z"
     }
   ]
 }
